@@ -2,6 +2,6 @@
 #define _BFC_
 #include"../graph.h"
 
-res test(graph&g, int bound);
+res test(graph&g, int bound, int);
 
 #endif

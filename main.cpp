@@ -35,6 +35,9 @@ void check(graph& g, int nodeBegin, int nodeEnd) {
                 s++;
             }
         }
+        if (node == 23141){
+             printf("%d\n", s * (s - 1) / 2);
+        }
         ds += s * (s - 1) / 2;
     }
     printf("total butterfly is %lld\n", ds);
@@ -48,7 +51,7 @@ int main(int argc, char* argv[]){
         check(trialGraph, atoi(argv[3]), atoi(argv[4]));
     }
     else if (strcmp("run", argv[2]) == 0){
-        res re = test(trialGraph, atoi(argv[3]));
+        res re = test(trialGraph, atoi(argv[3]), atoi(argv[5]));
         // fstream fp = fstream("ans.out", ios::app);
         // fp << argv[4] << "," << re.ans << "," << re.t << endl;
         // fp.close();

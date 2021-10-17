@@ -18,10 +18,10 @@ deps	= 	$(wildcard ./*.hpp) \
 
 
 $(exe):$(objs)
-	$(cc) -fcilkplus $(objs) -o $(exe)
+	$(cc) -fcilkplus $(objs) -o $(exe) -ltbb -lrt 
 
 %.o:%.cpp 
-	$(cc) -c -fcilkplus $< -o $@ 
+	$(cc) -c -fcilkplus $< -o $@  -lrt -ltbb
 
 
 # rm -rf *.o 
@@ -31,7 +31,7 @@ clean:
 	rm -rf *.o countingAlgorithm/*.o $(exe)
 
 test:
-	./butterfly.bin
+	./butterfly.bin ~/datasetsNew/datasets/bipartite/orkut/sorted run -1 condmat 32
 
 check:
-	./butterfly.bin  ~/datasetsNew/datasets/bipartite/condmat/sorted check 0 -1
+	./butterfly.bin  ~/datasetsNew/datasets/bipartite/github/sorted check 0 -1
