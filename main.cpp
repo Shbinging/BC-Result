@@ -1,0 +1,57 @@
+#include<bits/stdc++.h>
+#include"graph.h"
+#include"BFC-VP++/BFC-VP++.h"
+using namespace std;
+
+
+#define For(i, l, r) for(int i = l; i <= r; i++)
+
+void check(graph& g, int nodeBegin, int nodeEnd) {
+    //upBound = 2;
+    printf("----------check------------\n");
+    if (nodeEnd == -1) nodeEnd = g.vertexCount - 1;
+    long long ds = 0;
+    For(node, 0, nodeEnd) {
+        vector<int> lst;
+        For(i, g.beginPos[node], g.beginPos[node + 1] - 1) {
+            int v = g.edgeList[i];
+            int vv = min(node, v);
+            For(j, g.beginPos[v], g.beginPos[v + 1] - 1) {
+                if (g.edgeList[j] < vv) lst.push_back(g.edgeList[j]);
+                else break;
+            }
+        }
+        sort(lst.begin(), lst.end());
+        int tmp = -1;
+        int n = lst.size();
+        long long s = 0;
+        For(i, 0, n - 1) {
+            if (lst[i] != tmp) {
+                //if (tmp != -1) printf("%d %d\n", tmp, s);
+                tmp = lst[i];
+                ds += s * (s - 1) / 2;
+                s = 1;
+            }else{
+                s++;
+            }
+        }
+        ds += s * (s - 1) / 2;
+    }
+    printf("total butterfly is %lld\n", ds);
+    printf("-----------------------\n");
+}
+
+int main(int argc, char* argv[]){
+    graph trialGraph;
+    trialGraph.loadgraph(argv[1], 10);
+    if (strcmp("check", argv[2]) == 0){
+        check(trialGraph, atoi(argv[3]), atoi(argv[4]));
+    }
+    else if (strcmp("run", argv[2]) == 0){
+        res re = test(trialGraph, atoi(argv[3]));
+        // fstream fp = fstream("ans.out", ios::app);
+        // fp << argv[4] << "," << re.ans << "," << re.t << endl;
+        // fp.close();
+    }
+    return 0;
+}
