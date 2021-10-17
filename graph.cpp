@@ -48,6 +48,7 @@ void graph::loadgraph(string path,int bound)
     for(int i = 0; i < vertexCount; i++){
         if (deg[i] < 0) printf("wrong!");
     }
+    printf("start!\n");
     //printf("s16 os %d\n", s16);
 }
 

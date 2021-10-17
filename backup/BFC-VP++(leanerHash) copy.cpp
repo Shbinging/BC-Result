@@ -79,12 +79,17 @@ res test(graph& g, int bound, int threadNum) {
     cilk::reducer_opadd<LL> ans;
     timer c;
     c.start();
+    cilk::reducer_opadd<int> counter;
     
     //tbb::tick_count mainStartTime = tbb::tick_count::now();
     cilk_for(int i = 0; i < blockNum; i++) {
         LL sumPart = 0;
         
-        for (int u = i; u < vertexCount; u += blockNum) {
+        while(1) {
+            counter += 1;
+            int u = counter.get_value();
+            u -= 1;
+            if (u >= vertexCount) break;
             //hashList.clear(); 
             int l = beginPos[u];
             int r = beginPos[u + 1];

@@ -21,7 +21,7 @@ $(exe):$(objs)
 	$(cc) -fcilkplus $(objs) -o $(exe) -ltbb -lrt 
 
 %.o:%.cpp 
-	$(cc) -c -fcilkplus $< -o $@  -lrt -ltbb
+	$(cc) -c -fcilkplus -O3 $< -o $@  -lrt -ltbb
 
 
 # rm -rf *.o 
