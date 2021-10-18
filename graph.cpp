@@ -21,6 +21,7 @@ void graph::loadgraph(string path,int bound)
     beginPos1 = new long long[uCount+vCount+1];
     beginPos = new int [uCount + vCount + 1];
     edgeList = new int[edgeCount];
+    vertexCount = uCount + vCount;
     propertiesFile.close();   
     fstream beginFile(path+"/begin.bin", ios::in|ios::binary);
     fstream adjFile(path+"/adj.bin", ios::in|ios::binary);
@@ -28,28 +29,7 @@ void graph::loadgraph(string path,int bound)
     adjFile.read((char*)edgeList,sizeof(int)*(edgeCount));
     beginFile.close();
     adjFile.close();
-    //printf("ok");
-    deg = new int[uCount+vCount + 10];
-    memset(deg, 0, sizeof(deg));
-    vertexCount=uCount+vCount;
-    for(int i = 0; i <= vertexCount; i++)
-        beginPos[i] = (int) beginPos1[i];
-    for( int i = 0; i < vertexCount; ++i ) 
-            deg[i] = beginPos[i + 1] - beginPos[i];
-            
-    s16 = 0;
-    beginPos16 = new int [2000000];
-    
-    for(int i = 0; i < vertexCount; i++){
-        // if (deg[i] > 16)
-        // beginPos16[s16++] = i;
-        if (deg[i] > 8192) s16++;
-    }
-    for(int i = 0; i < vertexCount; i++){
-        if (deg[i] < 0) printf("wrong!");
-    }
-    printf("start!\n");
-    //printf("s16 os %d\n", s16);
+    cout << "start!" << endl;
 }
 
 
@@ -58,5 +38,4 @@ graph::~graph()
 {
     delete(beginPos);
     delete(edgeList);
-    delete(deg);
 }

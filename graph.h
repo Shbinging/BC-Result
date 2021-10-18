@@ -4,14 +4,16 @@
 
 using namespace std;
 struct res{
-    double t;
+    double totalTime, calcTime;
     long long ans;
     res(){
-        t = 0;
+        totalTime = 0;
+        calcTime = 0;
         ans = 0;
     }
-    res(double _t, long long _ans){
-        t = _t;
+    res(double _totalTime, double _calcTime, long long _ans){
+        totalTime = _totalTime;
+        calcTime = _calcTime;
         ans = _ans;
     }
 };

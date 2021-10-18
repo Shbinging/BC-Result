@@ -5,17 +5,19 @@
 #include"BFC-VP++.h"
 #include <tbb/concurrent_hash_map.h>
 #include <tbb/tbb_allocator.h>
-#include "tbb/tick_count.h"
 #include "timer.h"
 using namespace std;
 
 typedef long long LL;
-//const int hashSizePerThread = 50000000;
+const int hashSizePerThread = 50000000;
 const int blockNum = 32;//128
 
 struct hashNode {
     int val, t;
     LL s;
+    hashNode() {
+        t = -1;
+    }
 };
 
 LL hashInsert(hashNode* hashList, int key, int mod, int t){
@@ -49,25 +51,22 @@ LL hashInsert(hashNode* hashList, int key, int mod, int t){
 //     // }
 //     return res;
 // }
-res test(char* path, int bound, int threadNum) {
-    tbb::tick_count mainStartTime = tbb::tick_count::now();
-    graph g;
-    g.loadgraph(path, -1);
-
-
+res test(graph& g, int bound, int threadNum) {
     int vertexCount = g.vertexCount;
-    int hashSizePerThread = vertexCount;
-    LL* beginPos = g.beginPos1;// LL[vertexCount + 1];
-    int* edgeList = g.edgeList;// int[g.edgeCount];
-    //memcpy(beginPos, g.beginPos1, sizeof(LL) * (g.vertexCount + 1));
-    //memcpy(edgeList, g.edgeList, sizeof(int) * (g.edgeCount));
-    char threadNumStr[255];
-    sprintf(threadNumStr, "%d", 32);
-    __cilkrts_set_param("nworkers", threadNumStr);
+    LL* beginPos = new LL[vertexCount + 1];
+    int* edgeList = new int[g.edgeCount];
+    memcpy(beginPos, g.beginPos1, sizeof(LL) * (g.vertexCount + 1));
+    memcpy(edgeList, g.edgeList, sizeof(int) * (g.edgeCount));
+    //char threadNumStr[255];
+   // sprintf(threadNumStr, "%d", 32);
+   // __cilkrts_set_param("nworkers", threadNumStr);
     hashNode* hashList = new hashNode[1LL * (blockNum + 1) * hashSizePerThread];
+    memset(hashList, 0, sizeof(hashList));
     cout << "startt!" << endl;
     cilk::reducer_opadd<LL> ans;
-    tbb::tick_count calcStartTime = tbb::tick_count::now();
+    timer c;
+    c.start();
+    
     //tbb::tick_count mainStartTime = tbb::tick_count::now();
     cilk_for(int i = 0; i < blockNum; i++) {
         LL partSum = 0;
@@ -76,6 +75,7 @@ res test(char* path, int bound, int threadNum) {
             int l = beginPos[u];
             int r = beginPos[u + 1];
 
+            
             for(int j = l; j < r; j++) {
                 int v = edgeList[j];
                 int vv = min(u, v);
@@ -84,20 +84,13 @@ res test(char* path, int bound, int threadNum) {
                 for (int k = ll; k < rr; k++) {
                     int w = edgeList[k];
                     if (w >= vv) break;
-                    partSum += hashInsert(hashList + 1LL * i * hashSizePerThread, w, hashSizePerThread, u);
+                    partSum += hashInsert(hashList + i * hashSizePerThread, w, hashSizePerThread, u);
                 }
             }
         }
         ans += partSum;
     }
-    LL ans1 = ans.get_value();
-    double tTotal = (tbb::tick_count::now() - mainStartTime).seconds();
-    double tCalc = (tbb::tick_count::now() - calcStartTime).seconds();
-    printf("%lld\n", ans1);
-    printf("total time:%f\n",tTotal);
-    printf("calc time %f\n", tCalc);
-    //delete beginPos;
-    //delete edgeList;
-    delete hashList;
-    return res(tTotal, tCalc, ans1);
+    c.fin();
+    printf("%f\n",c.getTime());
+    printf("%lld\n", ans.get_value());
 }

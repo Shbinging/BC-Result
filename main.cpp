@@ -45,16 +45,11 @@ void check(graph& g, int nodeBegin, int nodeEnd) {
 }
 
 int main(int argc, char* argv[]){
-    graph trialGraph;
-    trialGraph.loadgraph(argv[1], 10);
-    if (strcmp("check", argv[2]) == 0){
-        check(trialGraph, atoi(argv[3]), atoi(argv[4]));
-    }
-    else if (strcmp("run", argv[2]) == 0){
-        res re = test(trialGraph, atoi(argv[3]), atoi(argv[5]));
-        // fstream fp = fstream("ans.out", ios::app);
-        // fp << argv[4] << "," << re.ans << "," << re.t << endl;
-        // fp.close();
+    if (strcmp("run", argv[2]) == 0){
+        res re = test(argv[1], atoi(argv[3]), atoi(argv[5]));
+        fstream fp = fstream("ans.out", ios::app);
+        fp << argv[4] << "," << re.ans << "," << re.totalTime << "," << re.calcTime << endl;
+        fp.close();
     }
     return 0;
 }

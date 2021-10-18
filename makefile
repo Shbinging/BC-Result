@@ -31,7 +31,7 @@ clean:
 	rm -rf *.o countingAlgorithm/*.o $(exe)
 
 test:
-	./butterfly.bin ~/datasetsNew/datasets/bipartite/orkut/sorted run -1 condmat 32
+	./butterfly.bin /home/shbing/datasetsNew/datasets/bipartite/bi-uk-2006-05/sorted run -1 trackers 32
 
 check:
 	./butterfly.bin  ~/datasetsNew/datasets/bipartite/github/sorted check 0 -1
