@@ -129,6 +129,18 @@ public:
 long long hashing(long long a, long long b, int vertexCount){
     return  a * vertexCount + b;
 }
+struct node{
+    long long val;
+    int pos;
+    node(){}
+    node(long long _val, int _pos){
+        val = _val;
+        pos = _pos;
+    }
+};
+bool operator <(node a, node b){
+    return a.val <= b.val;
+}
 int bfcEm(graph1& g, int maxBufferSize){
     int num = 0;
     bufferPool b("diskData/", 1, maxBufferSize);
@@ -143,16 +155,41 @@ int bfcEm(graph1& g, int maxBufferSize){
         }
     }
     b.finish();
+    bufferReader** brList = new bufferReader*[b.bufferNum];
+    priority_queue<node> q;
+    long long nn = 0;
+    for(int i = 0; i < b.bufferNum; i++){
+        brList[i] = new bufferReader(i, maxBufferSize / b.bufferNum);
+        nn++;
+        q.push(node(brList[i]->get(), i));
+    }
+    long long tmp = -1, s = 0, ans = 0;
+    // while(!q.empty()){
+    //     node tmpNode = q.top();
+    //     q.pop();
+    //     if (tmpNode.val != tmp){
+    //         //printf("%d ", tmp);
+    //         tmp = tmpNode.val;
+    //         ans += s * (s - 1) / 2;
+    //         s = 1;
+    //     }else s++;
+    //     if (!brList[tmpNode.pos]->isEmpty()){
+    //         nn++;
+    //         q.push(node(brList[tmpNode.pos]->get(), tmpNode.pos));
+    //     }
+    // }
+    // ans += s * (s - 1) / 2;
+    // 
     vector<long long>a;
     for(int i = 0; i < b.bufferNum; i++){
-        bufferReader br(i, maxBufferSize);
-        for(int j = 0; j < br.n; j++){
+        bufferReader br(i, maxBufferSize/ 1000);
+        while(!br.isEmpty()){
             a.push_back(br.get());
         }
     }
     int n = a.size();
     sort(a.begin(), a.end());
-    long long ans = 0, s = 0, tmp = -1;
+    //long long ans = 0, s = 0, tmp = -1;
     for(int i = 0; i < n; i++){
         if (a[i] != tmp){
             tmp = a[i];
@@ -161,5 +198,6 @@ int bfcEm(graph1& g, int maxBufferSize){
         }else s++;
     }
     ans += s * (s - 1) / 2;
-    cout << n << " " << ans << endl;
+    printf("n:%lld nn:%lld ans:%lld\n", n, nn, ans);
+    //cout << n << "ans << endl;
 }
