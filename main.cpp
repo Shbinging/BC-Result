@@ -1,6 +1,7 @@
 #include<bits/stdc++.h>
 #include"graph.h"
 #include"BFC-VP++/BFC-VP++.h"
+#include "BFC-EM/BFC-EM.h"
 using namespace std;
 
 
@@ -50,6 +51,11 @@ int main(int argc, char* argv[]){
         fstream fp = fstream("ans.out", ios::app);
         fp << argv[4] << "," << re.ans << "," << re.totalTime << "," << re.calcTime << endl;
         fp.close();
+    }
+    if (strcmp("em", argv[2]) == 0){
+        graph1  g;
+        g.loadgraph(string(argv[1]), -1);
+        bfcEm(g, atoi(argv[3]));
     }
     return 0;
 }

@@ -7,7 +7,7 @@ cc= "$(shell which g++)"
 .SILENT: %.o
 
 
-objs	= $(patsubst %.cpp,%.o,$(wildcard *.cpp) $(wildcard ./BFC-VP++/*.cpp)) 
+objs	= $(patsubst %.cpp,%.o,$(wildcard *.cpp) $(wildcard ./BFC-EM/*.cpp) $(wildcard ./BFC-VP++/*.cpp) )
 			
 
 
@@ -35,3 +35,5 @@ test:
 
 check:
 	./butterfly.bin  ~/datasetsNew/datasets/bipartite/github/sorted check 0 -1
+em:
+	./butterfly.bin /home/shbing/datasetsNew/datasets/bipartite/github/sorted em 1000

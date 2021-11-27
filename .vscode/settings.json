@@ -16,6 +16,7 @@
         "random": "cpp",
         "limits": "cpp",
         "iosfwd": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "fstream": "cpp"
     }
 }

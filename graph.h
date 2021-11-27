@@ -33,4 +33,10 @@ class graph
     ~graph();
 };
 
+class graph1:public graph{
+public:
+    void loadgraph(string folderName, int bound);
+    void loadsubGraph(long long l, long long r);
+    FILE* fp;
+};
 #endif
