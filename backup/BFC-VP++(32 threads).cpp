@@ -11,7 +11,7 @@ using namespace std;
 
 typedef long long LL;
 //const int hashSizePerThread = 50000000;
-const int blockNum = 128;//128
+const int blockNum = 32;//128
 
 struct hashNode {
     int val, t;
@@ -73,16 +73,9 @@ res test(char* path, int bound, int threadNum) {
         LL partSum = 0;
         for (int u = i; u < vertexCount; u += blockNum) {
             //hashList.clear(); 
-            if (u > 0) break;
             int l = beginPos[u];
             int r = beginPos[u + 1];
-            for(int j = l; j < r; j++){
-                if (edgeList[j] == 35){
-                    printf("ok!");
-                }
-                hashInsert(hashList + 1LL * i * hashSizePerThread, edgeList[j], hashSizePerThread, u);
-            }
-            LL pp = 0;
+
             for(int j = l; j < r; j++) {
                 int v = edgeList[j];
                 int vv = min(u, v);
@@ -90,22 +83,12 @@ res test(char* path, int bound, int threadNum) {
                 int rr = beginPos[v + 1];
                 for (int k = ll; k < rr; k++) {
                     int w = edgeList[k];
-                    if (w == u) continue;
-                    //if (w >= vv) break;
-                    int tmp;
-                    if (hashInsert(hashList + 1LL * i * hashSizePerThread, w, hashSizePerThread, u)){
-                        tmp = 1;
-                    }
-                    pp += tmp;
-                    if (tmp){
-                       // printf("%d\n", w);
-                    }
+                    if (w >= vv) break;
+                    partSum += hashInsert(hashList + 1LL * i * hashSizePerThread, w, hashSizePerThread, u);
                 }
             }
-            LL tt = 1LL * (r -l) * (r - l - 1) / 2;
-            printf("%d %f\n", u, 1.0* pp / tt);
         }
-        //ans += pp;
+        ans += partSum;
     }
     LL ans1 = ans.get_value();
     double tTotal = (tbb::tick_count::now() - mainStartTime).seconds();
