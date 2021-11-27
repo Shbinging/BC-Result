@@ -67,7 +67,7 @@ string getPath(int num){
 }
 class bufferPool{
 public:
-    bufferPool(string _dirPath, int _p, int _maxBufferSize){
+    bufferPool(string _dirPath, int _p, long long _maxBufferSize){
         dirPath = _dirPath;
         bufferNum = 0;
         p = _p;
@@ -92,18 +92,25 @@ public:
 
 class bufferReader{
 public:
-    bufferReader(int num, int _bufferSize){
-        fp = fopen(getPath(num).c_str(), "r");
+    bufferReader(int num, long long _bufferSize){
+        filePath = getPath(num);
+        fp = fopen(filePath.c_str(), "r");
+        assert(fp != NULL);
         fread(&n, 8, 1, fp);
         bufferSize = _bufferSize;
         buffer = new long long[bufferSize];
         s = 0;
         head = bufferSize;
+        fclose(fp);
     }
     void load(){
+        fp = fopen(filePath.c_str(), "r");
+        assert(fp != NULL);
+        fseek(fp, 1LL* (s + 1) *8, 0);
         head = 0;
         bufferSize = min(bufferSize, (int)n - s);
         fread(buffer, 8, bufferSize, fp);
+        fclose(fp);
     }
     long long get(){
         if (head == bufferSize && !isEmpty()){
@@ -118,11 +125,9 @@ public:
         if (s >= n) return 1;
         else return 0;
     }
-    long long n;
-    int s;
-    int bufferSize;
-    int head;
+    long long n, s, bufferSize, head;
     long long* buffer;
+    string filePath;
     FILE* fp;
 };
 
@@ -139,9 +144,9 @@ struct node{
     }
 };
 bool operator <(node a, node b){
-    return a.val <= b.val;
+    return a.val > b.val;
 }
-int bfcEm(graph1& g, int maxBufferSize){
+int bfcEm(graph1& g, long long maxBufferSize){
     int num = 0;
     bufferPool b("diskData/", 1, maxBufferSize);
     for(int i = 0; i < g.vertexCount; i++){
@@ -164,40 +169,55 @@ int bfcEm(graph1& g, int maxBufferSize){
         q.push(node(brList[i]->get(), i));
     }
     long long tmp = -1, s = 0, ans = 0;
-    // while(!q.empty()){
-    //     node tmpNode = q.top();
-    //     q.pop();
-    //     if (tmpNode.val != tmp){
-    //         //printf("%d ", tmp);
-    //         tmp = tmpNode.val;
-    //         ans += s * (s - 1) / 2;
-    //         s = 1;
-    //     }else s++;
-    //     if (!brList[tmpNode.pos]->isEmpty()){
-    //         nn++;
-    //         q.push(node(brList[tmpNode.pos]->get(), tmpNode.pos));
-    //     }
-    // }
-    // ans += s * (s - 1) / 2;
-    // 
-    vector<long long>a;
-    for(int i = 0; i < b.bufferNum; i++){
-        bufferReader br(i, maxBufferSize/ 1000);
-        while(!br.isEmpty()){
-            a.push_back(br.get());
-        }
-    }
-    int n = a.size();
-    sort(a.begin(), a.end());
-    //long long ans = 0, s = 0, tmp = -1;
-    for(int i = 0; i < n; i++){
-        if (a[i] != tmp){
-            tmp = a[i];
+    vector<long long> c;
+    while(!q.empty()){
+        node tmpNode = q.top();
+        q.pop();
+        c.push_back(tmpNode.val);
+        if (tmpNode.val != tmp){
+           // printf("%d ", tmpNode.val);
+            tmp = tmpNode.val;
             ans += s * (s - 1) / 2;
+            //ans += 1;
             s = 1;
         }else s++;
+        if (!brList[tmpNode.pos]->isEmpty()){
+            nn++;
+            q.push(node(brList[tmpNode.pos]->get(), tmpNode.pos));
+        }
     }
     ans += s * (s - 1) / 2;
-    printf("n:%lld nn:%lld ans:%lld\n", n, nn, ans);
+    // int l1 = c.size();
+    // for(int i = 1; i < l1; i++){
+    //     if (c[i] > c[i - 1]){
+    //         printf("wrong! %lld %lld\n", c[i - 1], c[i]);
+    //         break;
+    //     }
+    // }
+    //ans += 1;
+    // vector<long long>a;
+    // for(int i = 0; i < b.bufferNum; i++){
+    //     bufferReader br(i, maxBufferSize/ 1000);
+    //     while(!br.isEmpty()){
+    //         a.push_back(br.get());
+    //     }
+    // }
+    // long long ans1 = 0;tmp = -1;
+    // int n = a.size();
+    // sort(a.begin(), a.end());
+    // //long long ans = 0, s = 0, tmp = -1;
+    // for(int i = 0; i < n; i++){
+    //     if (a[i] != tmp){
+    //         tmp = a[i];
+    //         //printf("%lld ", tmp);
+    //         ans1 += s * (s - 1) / 2;
+    //         //ans1 += 1;
+    //         s = 1;
+    //     }else s++;
+    // }
+    // ans += s * (s - 1) / 2;
+    // //ans1 += 1;
+    // printf("n:%lld nn:%lld ans:%lld anspi:%lld\n", n, nn, ans, ans1);
+    printf("%lld\n", ans);
     //cout << n << "ans << endl;
 }

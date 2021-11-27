@@ -17,6 +17,7 @@
         "limits": "cpp",
         "iosfwd": "cpp",
         "new": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "ratio": "cpp"
     }
 }

@@ -55,7 +55,7 @@ int main(int argc, char* argv[]){
     if (strcmp("em", argv[2]) == 0){
         graph1  g;
         g.loadgraph(string(argv[1]), -1);
-        bfcEm(g, atoi(argv[3]));
+        bfcEm(g, strtoll(argv[3], NULL, 10));
     }
     return 0;
 }
