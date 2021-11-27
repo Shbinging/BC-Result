@@ -83,6 +83,7 @@ public:
     }
     void finish(){
         b->write();
+        bufferNum++;
     }
     string dirPath;
     int bufferNum, p;
@@ -146,7 +147,7 @@ int bfcEm(graph1& g, int maxBufferSize){
     for(int i = 0; i < b.bufferNum; i++){
         bufferReader br(i, maxBufferSize);
         for(int j = 0; j < br.n; j++){
-            a.push_back(br.buffer[j]);
+            a.push_back(br.get());
         }
     }
     int n = a.size();
