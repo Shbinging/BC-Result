@@ -142,4 +142,23 @@ int bfcEm(graph1& g, int maxBufferSize){
         }
     }
     b.finish();
+    vector<long long>a;
+    for(int i = 0; i < b.bufferNum; i++){
+        bufferReader br(i, maxBufferSize);
+        for(int j = 0; j < br.n; j++){
+            a.push_back(br.buffer[j]);
+        }
+    }
+    int n = a.size();
+    sort(a.begin(), a.end());
+    long long ans = 0, s = 0, tmp = -1;
+    for(int i = 0; i < n; i++){
+        if (a[i] != tmp){
+            tmp = a[i];
+            ans += s * (s - 1) / 2;
+            s = 1;
+        }else s++;
+    }
+    ans += s * (s - 1) / 2;
+    cout << n << " " << ans << endl;
 }
