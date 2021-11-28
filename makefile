@@ -36,4 +36,4 @@ test:
 check:
 	./butterfly.bin  ~/datasetsNew/datasets/bipartite/github/sorted check 0 -1
 em:
-	./butterfly.bin /home/shbing/datasetsNew/datasets/bipartite/ml/sorted em 1000000000
+	./butterfly.bin /home/shbing/datasetsNew/datasets/bipartite/ml/sorted em 10000000

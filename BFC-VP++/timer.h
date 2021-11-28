@@ -5,22 +5,23 @@ class timer{
     public:
         double begin;
         double end;
+        double t;
         timer(){
             begin = 0;
             end = 0;
+            t = 0;
         }
         void reset(){
-            begin = 0;
-            end = 0;
+            t = 0;
         }
         void start(){
             begin = clock();
         }
         void fin(){
-            end = clock();
+            t += 1.0*(clock() - begin) / CLOCKS_PER_SEC;
         }
         double getTime(){
-            return (end - begin) / CLOCKS_PER_SEC;
+            return t;
         }
 };
 #endif

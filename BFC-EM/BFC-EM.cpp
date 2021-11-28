@@ -8,8 +8,10 @@
 #include <tbb/tbb_allocator.h>
 #include "tbb/tick_count.h"
 #include <tbb/mutex.h>
+#include "../BFC-VP++/timer.h"
 using namespace std;
 
+timer ioTime;
 template<class T> void frr(FILE* fp, T& dest, long long size = 1){
     fread(&dest, sizeof(T), size, fp);
 }
@@ -40,6 +42,7 @@ public:
         return 1;
     }
     bool write(){
+        ioTime.start();
         FILE* fp = fopen(path.c_str(), "w");
         if (fp == NULL){
             printf("write error");
@@ -49,6 +52,7 @@ public:
         sort(bufferArray, bufferArray + num);
         wrr(fp, bufferArray, num);
         fclose(fp);
+        ioTime.fin();
     }
     void reset(string _path){
         num = 0;
@@ -94,23 +98,27 @@ class bufferReader{
 public:
     bufferReader(int num, long long _bufferSize){
         filePath = getPath(num);
+        ioTime.start();
         fp = fopen(filePath.c_str(), "r");
         assert(fp != NULL);
         fread(&n, 8, 1, fp);
+        ioTime.fin();
         bufferSize = _bufferSize;
         buffer = new long long[bufferSize];
         s = 0;
         head = bufferSize;
-        fclose(fp);
+        //fclose(fp);
     }
     void load(){
-        fp = fopen(filePath.c_str(), "r");
-        assert(fp != NULL);
-        fseek(fp, 1LL* (s + 1) *8, 0);
+        ioTime.start();
+        //fp = fopen(filePath.c_str(), "r");
+        //assert(fp != NULL);
+        //fseek(fp, 1LL* (s + 1) *8, 0);
         head = 0;
         bufferSize = min(bufferSize, (int)n - s);
         fread(buffer, 8, bufferSize, fp);
-        fclose(fp);
+        ioTime.fin();
+        //fclose(fp);
     }
     long long get(){
         if (head == bufferSize && !isEmpty()){
@@ -149,6 +157,8 @@ bool operator <(node a, node b){
 int bfcEm(graph1& g, long long maxBufferSize){
     int num = 0;
     bufferPool b("diskData/", 1, maxBufferSize);
+    timer totalTime;
+    totalTime.start();
     for(int i = 0; i < g.vertexCount; i++){
         int len = g.beginPos1[i + 1] - g.beginPos1[i];
         g.loadsubGraph(g.beginPos1[i], g.beginPos1[i + 1]);
@@ -218,6 +228,7 @@ int bfcEm(graph1& g, long long maxBufferSize){
     // ans += s * (s - 1) / 2;
     // //ans1 += 1;
     // printf("n:%lld nn:%lld ans:%lld anspi:%lld\n", n, nn, ans, ans1);
-    printf("%lld\n", ans);
+    totalTime.fin();
+    printf("%lld %f %f\n", ans, ioTime.getTime(), totalTime.getTime());
     //cout << n << "ans << endl;
 }
