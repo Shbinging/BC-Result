@@ -9,6 +9,7 @@
 #include "tbb/tick_count.h"
 #include <tbb/mutex.h>
 #include "../BFC-VP++/timer.h"
+#include "stdio.h"
 using namespace std;
 
 timer ioTime;
@@ -115,7 +116,7 @@ public:
         //assert(fp != NULL);
         //fseek(fp, 1LL* (s + 1) *8, 0);
         head = 0;
-        bufferSize = min(bufferSize, (int)n - s);
+        bufferSize = min(bufferSize, n - s);
         fread(buffer, 8, bufferSize, fp);
         ioTime.fin();
         //fclose(fp);
@@ -154,7 +155,12 @@ struct node{
 bool operator <(node a, node b){
     return a.val > b.val;
 }
-int bfcEm(graph1& g, long long maxBufferSize){
+int bfcEm(string graphName, long long storageSize){
+    long long maxBufferSize = storageSize / 8 * 1024 * 1024;
+    graph1 g;
+    ioTime.start();
+    g.loadgraph("/home/shbing/datasetsNew/datasets/bipartite/"+ graphName + "/sorted", -1);
+    ioTime.fin();
     int num = 0;
     bufferPool b("diskData/", 1, maxBufferSize);
     timer totalTime;
@@ -229,6 +235,11 @@ int bfcEm(graph1& g, long long maxBufferSize){
     // //ans1 += 1;
     // printf("n:%lld nn:%lld ans:%lld anspi:%lld\n", n, nn, ans, ans1);
     totalTime.fin();
-    printf("%lld %f %f\n", ans, ioTime.getTime(), totalTime.getTime());
+    FILE* ansfile = fopen("testOut.csv", "a+");
+    if (ansfile == NULL){
+        printf("ans open wrong!");
+    }
+    fprintf(ansfile, "%s,%lld,%lld,%f,%f\n", graphName.c_str(), storageSize, ans,  totalTime.getTime(), ioTime.getTime());
+    fclose(ansfile);
     //cout << n << "ans << endl;
 }

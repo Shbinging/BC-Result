@@ -18,6 +18,9 @@
         "iosfwd": "cpp",
         "new": "cpp",
         "fstream": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "condition_variable": "cpp",
+        "ctime": "cpp",
+        "shared_mutex": "cpp"
     }
 }
