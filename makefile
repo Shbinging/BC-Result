@@ -7,7 +7,7 @@ cc= "$(shell which g++)"
 .SILENT: %.o
 
 
-objs	= $(patsubst %.cpp,%.o,$(wildcard *.cpp) $(wildcard ./BFC-EM/*.cpp) $(wildcard ./BFC-VP++/*.cpp) )
+objs	= $(patsubst %.cpp,%.o,$(wildcard *.cpp) $(wildcard ./BFC-EM/*.cpp))
 			
 
 
@@ -18,10 +18,10 @@ deps	= 	$(wildcard ./*.hpp) \
 
 
 $(exe):$(objs)
-	$(cc) -fcilkplus $(objs) -o $(exe) -ltbb -lrt 
+	ld  $(objs) -o $(exe)
 
 %.o:%.cpp 
-	$(cc) -c -fcilkplus -O3 $< -o $@  -lrt -ltbb
+	$(cc) -c -O3 $< -o $@ 
 
 
 # rm -rf *.o 
@@ -30,10 +30,7 @@ $(exe):$(objs)
 clean:
 	rm -rf *.o countingAlgorithm/*.o $(exe)
 
-test:
-	./butterfly.bin /home/shbing/datasetsNew/datasets/bipartite/github/sorted run -1 orkut 32
-
-check:
-	./butterfly.bin  ~/datasetsNew/datasets/bipartite/github/sorted check 0 -1
 em:
-	./butterfly.bin amazon em 1024
+	rm -r diskData
+	mkdir -p diskData
+	./butterfly.bin $(g) em 1024
