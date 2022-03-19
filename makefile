@@ -8,7 +8,7 @@ cc= "$(shell which g++)"
 
 
 objs	= $(patsubst %.cpp,%.o,$(wildcard *.cpp) $(wildcard ./BFC-EM/*.cpp))
-			
+ 		
 
 
 deps	= 	$(wildcard ./*.hpp) \
@@ -17,11 +17,11 @@ deps	= 	$(wildcard ./*.hpp) \
 # foldobjs = 	$(patsubst %.cu,%.o,$(wildcard countingAlgorithm/*.cu)) 
 
 
-$(exe):$(objs)
-	ld  $(objs) -o $(exe)
+$(exe):$(objs) 
+	$(cc)  $(objs) -o $(exe)
 
-%.o:%.cpp 
-	$(cc) -c -O3 $< -o $@ 
+%.o:%.cpp
+	$(cc) -c -O3 -fpermissive $< -o $@ 
 
 
 # rm -rf *.o 
@@ -33,4 +33,4 @@ clean:
 em:
 	rm -r diskData
 	mkdir -p diskData
-	./butterfly.bin $(g) em 1024
+	time -p -v ./butterfly.bin $(g) em 1024
