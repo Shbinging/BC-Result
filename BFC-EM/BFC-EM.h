@@ -2,5 +2,5 @@
 #define bfcem
 #include "../graph.h"
 
-int bfcEm(string graphName, long long maxBufferSize);
+int bfcEm(string graphName, u_int64_t maxBufferSize);
 #endif

@@ -7,38 +7,90 @@
 using namespace std;
 
 timer calcTime;
-template<class T> void frr(FILE* fp, T& dest, long long size = 1){
+template<class T> void frr(FILE* fp, T& dest, u_int64_t size = 1){
     fread(&dest, sizeof(T), size, fp);
 }
 
-template<class T> void frr(FILE* fp, T* dest, long long size = 1){
+template<class T> void frr(FILE* fp, T* dest, u_int64_t size = 1){
     fread(dest, sizeof(T), size, fp);
 }
 
 template <class T>
-void wrr(FILE *fp, T* val, long long size = 1){
+void wrr(FILE *fp, T* val, u_int64_t size = 1){
     fwrite(val, sizeof(T), size, fp);
 }
 template <class T>
-void wrr(FILE *fp, T val, long long size = 1){
+void wrr(FILE *fp, T val, u_int64_t size = 1){
     fwrite(&val, sizeof(T), size, fp);
 }
 inline int cmp_long(const void * a, const void * b)
 {
-	const long long fa = *(const long long *) a;
-	const long long fb = *(const long long *) b;
+	const u_int64_t fa = *(const u_int64_t *) a;
+	const u_int64_t fb = *(const u_int64_t *) b;
 	return (fa > fb) - (fa < fb);
 }
 
+void calcBuffer(u_int64_t* &bufferArray, u_int64_t num){
+    calcTime.start();
+    unordered_map<uint32_t, uint32_t> ha;
+    for(uint64_t i = 0; i < num; i++){
+        uint32_t key = bufferArray[i] >> 32;
+        if (!ha.count(key)){
+            ha[key] = 1;
+        }else{
+            ha[key]++;
+        }
+    }
+    vector<uint32_t> keyOrderList, keyEndPos, keyBeginPos;
+    unordered_map<uint32_t, uint32_t> keyOrderMap;
+    int n = ha.size();
+    keyOrderList.resize(n);
+    keyBeginPos.resize(n + 10, 0);
+    keyEndPos.resize(n + 10, 0);
+    int i = 0;
+    for(auto p = ha.begin(); p != ha.end(); p++){
+        keyOrderList[i++] = p->first;
+    }
+    sort(keyOrderList.begin(), keyOrderList.end());
+    for(int i = 0; i < n; i++){
+        keyOrderMap[keyOrderList[i]] = i;
+    }
+    for(int i = 0; i < num; i++){
+        uint32_t key = bufferArray[i] >> 32;
+        keyBeginPos[keyOrderMap[key] + 1]++;
+    }
+    for(int i = 1; i <= n; i++){
+        keyEndPos[i] = keyBeginPos[i];
+    }
+    for(int i = 1; i <= n; i++){
+        keyEndPos[i] += keyEndPos[i - 1];
+        keyBeginPos[i] += keyBeginPos[i - 1];
+    }
+    uint64_t* tmpBuffer = new uint64_t[num];
+    for(int i = 0; i < num; i++){
+        uint32_t key = bufferArray[i] >> 32;
+        tmpBuffer[keyEndPos[keyOrderMap[key]]++] = bufferArray[i];
+    }
+    for(int i = 0; i < n; i++){
+        wolfsort(tmpBuffer + keyBeginPos[i], keyBeginPos[i + 1] - keyBeginPos[i], 8, cmp_long);
+       // sort(tmpBuffer + keyBeginPos[i], tmpBuffer + keyBeginPos[i + 1]);
+    }
+    // for(int i = 1; i < num; i++){
+    //     assert(tmpBuffer[i] >= tmpBuffer[i - 1]);
+    // }
+    calcTime.fin();
+    delete bufferArray;
+    bufferArray = tmpBuffer;
+}
 class buffer{
 public:
-    buffer(string _path, long long _size){
+    buffer(string _path, u_int64_t _size){
         size = _size;
-        bufferArray = new long long [size];
+        bufferArray = new u_int64_t [size];
         num = 0;
         path = _path;
     }
-    bool append(long long val){
+    bool append(u_int64_t val){
         if (num >= size) return 0;
         else bufferArray[num++] = val;
         return 1;
@@ -51,10 +103,10 @@ public:
             return 0;
         }      
         wrr(fp, num, 1);
-        calcTime.start();
         //sort(bufferArray, bufferArray + num);
-        wolfsort(bufferArray, num, 8, cmp_long);
-        calcTime.fin();
+        //wolfsort(bufferArray, num, 8, cmp_long);
+        calcBuffer(bufferArray, num);
+       
    
         wrr(fp, bufferArray, num);
         fclose(fp);
@@ -64,9 +116,12 @@ public:
         num = 0;
         path = _path;
     }
-    long long size, num;
+    void clear(){
+        delete bufferArray;
+    }
+    u_int64_t size, num;
     string path;
-    long long* bufferArray;
+    u_int64_t* bufferArray;
 };
 string getPath(int num){    
     stringstream ss;
@@ -77,13 +132,13 @@ string getPath(int num){
 }
 class bufferPool{
 public:
-    bufferPool(string _dirPath, int _p, long long _maxBufferSize){
+    bufferPool(string _dirPath, int _p, u_int64_t _maxBufferSize){
         dirPath = _dirPath;
         bufferNum = 0;
         p = _p;
         b = new buffer(getPath(bufferNum), _maxBufferSize);
     }
-    void append(long long val){
+    void append(u_int64_t val){
         if (!b->append(val)){
             b->write();
             bufferNum++;
@@ -102,7 +157,7 @@ public:
 
 class bufferReader{
 public:
-    bufferReader(int num, long long _bufferSize){
+    bufferReader(int num, u_int64_t _bufferSize){
         filePath = getPath(num);
         //ioTime.start();
         fp = fopen(filePath.c_str(), "r");
@@ -110,7 +165,7 @@ public:
         fread(&n, 8, 1, fp);
         //ioTime.fin();
         bufferSize = _bufferSize;
-        buffer = new long long[bufferSize];
+        buffer = new u_int64_t[bufferSize];
         s = 0;
         head = bufferSize;
         //fclose(fp);
@@ -126,7 +181,7 @@ public:
         //ioTime.fin();
         //fclose(fp);
     }
-    long long get(){
+    u_int64_t get(){
         if (head == bufferSize && !isEmpty()){
             load();
         }
@@ -139,20 +194,20 @@ public:
         if (s >= n) return 1;
         else return 0;
     }
-    long long n, s, bufferSize, head;
-    long long* buffer;
+    u_int64_t n, s, bufferSize, head;
+    u_int64_t* buffer;
     string filePath;
     FILE* fp;
 };
 
-long long hashing(long long a, long long b, int vertexCount){
-    return  a * vertexCount + b;
+u_int64_t hashing(u_int64_t a, u_int64_t b, int vertexCount){
+    return  (a << 32) + b;
 }
 struct node{
-    long long val;
+    u_int64_t val;
     int pos;
     node(){}
-    node(long long _val, int _pos){
+    node(u_int64_t _val, int _pos){
         val = _val;
         pos = _pos;
     }
@@ -161,10 +216,10 @@ bool operator <(node a, node b){
     return a.val > b.val;
 }
 
-int bfcEm(string graphName, long long storageSize){
+int bfcEm(string graphName, u_int64_t storageSize){
     timer totalTime;
     totalTime.start();
-    long long maxBufferSize = storageSize / 8 * 1024 * 1024;
+    u_int64_t maxBufferSize = storageSize / 8 / 2 * 1024 * 1024;
     graph1 g;
     g.loadgraph("/home/shbing/datasetsNew/datasets/bipartite/"+ graphName + "/sorted", -1);
     int num = 0;
@@ -183,14 +238,14 @@ int bfcEm(string graphName, long long storageSize){
     delete b.b->bufferArray;
     bufferReader** brList = new bufferReader*[b.bufferNum];
     priority_queue<node> q;
-    long long nn = 0;
+    u_int64_t nn = 0;
     for(int i = 0; i < b.bufferNum; i++){
         brList[i] = new bufferReader(i, maxBufferSize / b.bufferNum);
         nn++;
         q.push(node(brList[i]->get(), i));
     }
-    long long tmp = -1, s = 0, ans = 0;
-    //vector<long long> c;
+    u_int64_t tmp = 0, s = 0, ans = 0;
+    vector<u_int64_t> c;
     while(!q.empty()){
         node tmpNode = q.top();
         q.pop();
