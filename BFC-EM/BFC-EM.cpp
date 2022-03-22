@@ -29,12 +29,22 @@ inline int cmp_long(const void * a, const void * b)
 	const u_int64_t fb = *(const u_int64_t *) b;
 	return (fa > fb) - (fa < fb);
 }
-
-void calcBuffer(u_int64_t* &bufferArray, u_int64_t num){
-    calcTime.start();
+inline int cmp_int(const void * a, const void * b)
+{
+	const u_int32_t fa = *(const u_int32_t *) a;
+	const u_int32_t fb = *(const u_int32_t *) b;
+	return (fa > fb) - (fa < fb);
+}
+inline uint32_t getLowerKey(uint64_t u){
+    return u & 0xffffffL;
+}
+inline uint32_t getHigherKey(uint64_t u){
+    return (u >> 24);
+}
+void radixOneRound(u_int64_t* bufferArray, u_int64_t* tmpBuffer, u_int64_t num, u_int32_t (*getKey)(uint64_t)){
     unordered_map<uint32_t, uint32_t> ha;
     for(uint64_t i = 0; i < num; i++){
-        uint32_t key = bufferArray[i] >> 32;
+        uint32_t key = getKey(bufferArray[i]);
         if (!ha.count(key)){
             ha[key] = 1;
         }else{
@@ -51,12 +61,13 @@ void calcBuffer(u_int64_t* &bufferArray, u_int64_t num){
     for(auto p = ha.begin(); p != ha.end(); p++){
         keyOrderList[i++] = p->first;
     }
+    //wolfsort(keyOrderList.data(), n, 4, cmp_int);
     sort(keyOrderList.begin(), keyOrderList.end());
     for(int i = 0; i < n; i++){
         keyOrderMap[keyOrderList[i]] = i;
     }
     for(int i = 0; i < num; i++){
-        uint32_t key = bufferArray[i] >> 32;
+        uint32_t key = getKey(bufferArray[i]);
         keyBeginPos[keyOrderMap[key] + 1]++;
     }
     for(int i = 1; i <= n; i++){
@@ -66,22 +77,20 @@ void calcBuffer(u_int64_t* &bufferArray, u_int64_t num){
         keyEndPos[i] += keyEndPos[i - 1];
         keyBeginPos[i] += keyBeginPos[i - 1];
     }
-    uint64_t* tmpBuffer = new uint64_t[num];
     for(int i = 0; i < num; i++){
-        uint32_t key = bufferArray[i] >> 32;
+        uint32_t key = getKey(bufferArray[i]);
         tmpBuffer[keyEndPos[keyOrderMap[key]]++] = bufferArray[i];
     }
-    for(int i = 0; i < n; i++){
-        wolfsort(tmpBuffer + keyBeginPos[i], keyBeginPos[i + 1] - keyBeginPos[i], 8, cmp_long);
-       // sort(tmpBuffer + keyBeginPos[i], tmpBuffer + keyBeginPos[i + 1]);
-    }
-    // for(int i = 1; i < num; i++){
-    //     assert(tmpBuffer[i] >= tmpBuffer[i - 1]);
-    // }
-    calcTime.fin();
-    delete bufferArray;
-    bufferArray = tmpBuffer;
+    printf("%lld\n", n);
 }
+
+void calcBuffer(u_int64_t* &bufferArray, u_int64_t num){
+    uint64_t* tmpBuffer = new uint64_t[num];
+    radixOneRound(bufferArray, tmpBuffer, num, getLowerKey);
+    radixOneRound(tmpBuffer, bufferArray, num, getHigherKey);
+    delete tmpBuffer;
+}
+
 class buffer{
 public:
     buffer(string _path, u_int64_t _size){
@@ -103,11 +112,12 @@ public:
             return 0;
         }      
         wrr(fp, num, 1);
+        calcTime.start();
         //sort(bufferArray, bufferArray + num);
         //wolfsort(bufferArray, num, 8, cmp_long);
         calcBuffer(bufferArray, num);
        
-   
+        calcTime.fin();
         wrr(fp, bufferArray, num);
         fclose(fp);
         //ioTime.fin();
@@ -201,7 +211,7 @@ public:
 };
 
 u_int64_t hashing(u_int64_t a, u_int64_t b, int vertexCount){
-    return  (a << 32) + b;
+    return  (a << 20) + b;
 }
 struct node{
     u_int64_t val;

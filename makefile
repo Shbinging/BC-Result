@@ -33,4 +33,4 @@ clean:
 em:
 	#rm -r -i diskData
 	mkdir -p diskData
-	time -p -v ./butterfly.bin $(g) em 4096
+	time -p -v ./butterfly.bin $(g) em 1024
