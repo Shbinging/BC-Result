@@ -68,6 +68,7 @@ void radixOneRound(u_int64_t* bufferArray, u_int64_t* tmpBuffer, u_int64_t num, 
     }
     for(int i = 0; i < num; i++){
         uint32_t key = getKey(bufferArray[i]);
+        //keyBeginPos[0]++;
         keyBeginPos[keyOrderMap[key] + 1]++;
     }
     for(int i = 1; i <= n; i++){
@@ -77,8 +78,10 @@ void radixOneRound(u_int64_t* bufferArray, u_int64_t* tmpBuffer, u_int64_t num, 
         keyEndPos[i] += keyEndPos[i - 1];
         keyBeginPos[i] += keyBeginPos[i - 1];
     }
+    int kk = 0;
     for(int i = 0; i < num; i++){
         uint32_t key = getKey(bufferArray[i]);
+        //tmpBuffer[kk++] = bufferArray[i]; 
         tmpBuffer[keyEndPos[keyOrderMap[key]]++] = bufferArray[i];
     }
     printf("%lld\n", n);
@@ -255,22 +258,22 @@ int bfcEm(string graphName, u_int64_t storageSize){
         q.push(node(brList[i]->get(), i));
     }
     u_int64_t tmp = 0, s = 0, ans = 0;
-    vector<u_int64_t> c;
-    while(!q.empty()){
-        node tmpNode = q.top();
-        q.pop();
-        //c.push_back(tmpNode.val);
-        if (tmpNode.val != tmp){
-            tmp = tmpNode.val;
-            ans += s * (s - 1) / 2;
-            s = 1;
-        }else s++;
-        if (!brList[tmpNode.pos]->isEmpty()){
-            nn++;
-            q.push(node(brList[tmpNode.pos]->get(), tmpNode.pos));
-        }
-    }
-    ans += s * (s - 1) / 2;
+    // vector<u_int64_t> c;
+    // while(!q.empty()){
+    //     node tmpNode = q.top();
+    //     q.pop();
+    //     //c.push_back(tmpNode.val);
+    //     if (tmpNode.val != tmp){
+    //         tmp = tmpNode.val;
+    //         ans += s * (s - 1) / 2;
+    //         s = 1;
+    //     }else s++;
+    //     if (!brList[tmpNode.pos]->isEmpty()){
+    //         nn++;
+    //         q.push(node(brList[tmpNode.pos]->get(), tmpNode.pos));
+    //     }
+    // }
+    // ans += s * (s - 1) / 2;
     totalTime.fin();
     FILE* ansfile = fopen("testOut.csv", "a+");
     if (ansfile == NULL){
