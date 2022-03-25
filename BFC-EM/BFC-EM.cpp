@@ -68,8 +68,8 @@ void radixOneRound(u_int64_t* bufferArray, u_int64_t* tmpBuffer, u_int64_t num, 
     }
     for(int i = 0; i < num; i++){
         uint32_t key = getKey(bufferArray[i]);
-        //keyBeginPos[0]++;
-        keyBeginPos[keyOrderMap[key] + 1]++;
+        keyBeginPos[0]++;
+        //keyBeginPos[keyOrderMap[key] + 1]++;
     }
     for(int i = 1; i <= n; i++){
         keyEndPos[i] = keyBeginPos[i];
@@ -81,8 +81,8 @@ void radixOneRound(u_int64_t* bufferArray, u_int64_t* tmpBuffer, u_int64_t num, 
     int kk = 0;
     for(int i = 0; i < num; i++){
         uint32_t key = getKey(bufferArray[i]);
-        //tmpBuffer[kk++] = bufferArray[i]; 
-        tmpBuffer[keyEndPos[keyOrderMap[key]]++] = bufferArray[i];
+        tmpBuffer[kk++] = bufferArray[i]; 
+        //tmpBuffer[keyEndPos[keyOrderMap[key]]++] = bufferArray[i];
     }
     printf("%lld\n", n);
 }
