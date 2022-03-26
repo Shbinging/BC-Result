@@ -28,7 +28,7 @@ $(exe):$(objs)
 # ./butterfly.bin ../dataset/bipartite/wiki-it/ 0
 
 clean:
-	rm -rf *.o countingAlgorithm/*.o $(exe)
+	rm -rf *.o countingAlgorithm/*.o BFC-EM/*.o $(exe)
 
 em:
 	rm -r diskData

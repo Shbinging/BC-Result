@@ -1,7 +1,7 @@
 #include<bits/stdc++.h>
 #include<bits/stdc++.h>
 #include"BFC-EM.h"
-#include "../BFC-VP++/timer.h"
+#include "timer.h"
 #include "stdio.h"
 #include "wolfsort/src/wolfsort.h"
 using namespace std;
