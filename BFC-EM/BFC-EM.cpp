@@ -6,6 +6,7 @@
 #include "wolfsort/src/wolfsort.h"
 using namespace std;
 
+static uint32_t totalNodeGloable;
 timer calcTime;
 template<class T> void frr(FILE* fp, T& dest, u_int64_t size = 1){
     fread(&dest, sizeof(T), size, fp);
@@ -36,61 +37,59 @@ inline int cmp_int(const void * a, const void * b)
 	return (fa > fb) - (fa < fb);
 }
 inline uint32_t getLowerKey(uint64_t u){
-    return u & 0xffffffL;
+    return u & 0xffffffffL;
 }
 inline uint32_t getHigherKey(uint64_t u){
-    return (u >> 24);
+    return (u >> 32);
 }
-void radixOneRound(u_int64_t* bufferArray, u_int64_t* tmpBuffer, u_int64_t num, u_int32_t (*getKey)(uint64_t)){
-    unordered_map<uint32_t, uint32_t> ha;
-    for(uint64_t i = 0; i < num; i++){
+void radixOneRound(u_int64_t* bufferArray, u_int64_t* tmpBuffer, u_int64_t num, u_int32_t (*getKey)(uint64_t), u_int32_t totalNode, uint32_t* keyOrderList){
+    memset(keyOrderList, 0, sizeof(keyOrderList));
+    for(uint32_t i = 0; i < num; i++){
         uint32_t key = getKey(bufferArray[i]);
-        if (!ha.count(key)){
-            ha[key] = 1;
-        }else{
-            ha[key]++;
+        keyOrderList[key]++;
+    }
+    int n = 0;
+    for(uint32_t i = 0; i < totalNode + 1; i++){
+        if (keyOrderList[i]){
+            keyOrderList[n++] = i;
         }
     }
-    vector<uint32_t> keyOrderList, keyEndPos, keyBeginPos;
-    unordered_map<uint32_t, uint32_t> keyOrderMap;
-    int n = ha.size();
-    keyOrderList.resize(n);
+    vector<uint32_t> keyEndPos, keyBeginPos;
     keyBeginPos.resize(n + 10, 0);
     keyEndPos.resize(n + 10, 0);
-    int i = 0;
-    for(auto p = ha.begin(); p != ha.end(); p++){
-        keyOrderList[i++] = p->first;
-    }
-    //wolfsort(keyOrderList.data(), n, 4, cmp_int);
-    sort(keyOrderList.begin(), keyOrderList.end());
+    wolfsort(keyOrderList, n, 4, cmp_int);
+    uint32_t* keyOrderMap = new uint32_t[keyOrderList[n - 1] + 1];
+    //sort(keyOrderList.begin(), keyOrderList.end());
     for(int i = 0; i < n; i++){
         keyOrderMap[keyOrderList[i]] = i;
     }
     for(int i = 0; i < num; i++){
         uint32_t key = getKey(bufferArray[i]);
-        keyBeginPos[0]++;
-        //keyBeginPos[keyOrderMap[key] + 1]++;
+        //keyBeginPos[0]++;
+        keyBeginPos[keyOrderMap[key] + 1]++;
+    }
+    for(int i = 1; i <= n; i++){
+        keyBeginPos[i] += keyBeginPos[i - 1];
     }
     for(int i = 1; i <= n; i++){
         keyEndPos[i] = keyBeginPos[i];
     }
-    for(int i = 1; i <= n; i++){
-        keyEndPos[i] += keyEndPos[i - 1];
-        keyBeginPos[i] += keyBeginPos[i - 1];
-    }
     int kk = 0;
     for(int i = 0; i < num; i++){
         uint32_t key = getKey(bufferArray[i]);
-        tmpBuffer[kk++] = bufferArray[i]; 
-        //tmpBuffer[keyEndPos[keyOrderMap[key]]++] = bufferArray[i];
+        //tmpBuffer[kk++] = bufferArray[i]; 
+        tmpBuffer[keyEndPos[keyOrderMap[key]]++] = bufferArray[i];
     }
+    delete keyOrderMap;
     printf("%lld\n", n);
 }
 
 void calcBuffer(u_int64_t* &bufferArray, u_int64_t num){
+    uint32_t* keyOrderList = new uint32_t[totalNodeGloable + 1];
     uint64_t* tmpBuffer = new uint64_t[num];
-    radixOneRound(bufferArray, tmpBuffer, num, getLowerKey);
-    radixOneRound(tmpBuffer, bufferArray, num, getHigherKey);
+    radixOneRound(bufferArray, tmpBuffer, num, getLowerKey, totalNodeGloable, keyOrderList);
+    radixOneRound(tmpBuffer, bufferArray, num, getHigherKey, totalNodeGloable, keyOrderList);
+    delete keyOrderList;
     delete tmpBuffer;
 }
 
@@ -214,7 +213,7 @@ public:
 };
 
 u_int64_t hashing(u_int64_t a, u_int64_t b, int vertexCount){
-    return  (a << 20) + b;
+    return  (a << 32) + b;
 }
 struct node{
     u_int64_t val;
@@ -235,6 +234,7 @@ int bfcEm(string graphName, u_int64_t storageSize){
     u_int64_t maxBufferSize = storageSize / 8 / 2 * 1024 * 1024;
     graph1 g;
     g.loadgraph("/home/shbing/datasetsNew/datasets/bipartite/"+ graphName + "/sorted", -1);
+    totalNodeGloable = g.vertexCount;
     int num = 0;
     bufferPool b("diskData/", 1, maxBufferSize);
     for(int i = 0; i < g.vertexCount; i++){
@@ -258,22 +258,22 @@ int bfcEm(string graphName, u_int64_t storageSize){
         q.push(node(brList[i]->get(), i));
     }
     u_int64_t tmp = 0, s = 0, ans = 0;
-    // vector<u_int64_t> c;
-    // while(!q.empty()){
-    //     node tmpNode = q.top();
-    //     q.pop();
-    //     //c.push_back(tmpNode.val);
-    //     if (tmpNode.val != tmp){
-    //         tmp = tmpNode.val;
-    //         ans += s * (s - 1) / 2;
-    //         s = 1;
-    //     }else s++;
-    //     if (!brList[tmpNode.pos]->isEmpty()){
-    //         nn++;
-    //         q.push(node(brList[tmpNode.pos]->get(), tmpNode.pos));
-    //     }
-    // }
-    // ans += s * (s - 1) / 2;
+    vector<u_int64_t> c;
+    while(!q.empty()){
+        node tmpNode = q.top();
+        q.pop();
+        //c.push_back(tmpNode.val);
+        if (tmpNode.val != tmp){
+            tmp = tmpNode.val;
+            ans += s * (s - 1) / 2;
+            s = 1;
+        }else s++;
+        if (!brList[tmpNode.pos]->isEmpty()){
+            nn++;
+            q.push(node(brList[tmpNode.pos]->get(), tmpNode.pos));
+        }
+    }
+    ans += s * (s - 1) / 2;
     totalTime.fin();
     FILE* ansfile = fopen("testOut.csv", "a+");
     if (ansfile == NULL){
