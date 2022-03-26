@@ -2,14 +2,29 @@
 
 import os
 
-def file_name(file_dir):
-    lst = []
-    for root, dirs, files in os.walk(file_dir):
-        if ("sorted" in root):
-            lst.append(root)
-    return lst
+ParaList = [
+        {
+            "memSize":1024, 
+            "graphName": ["twitter", "flicker", "livejournal"]
+        },
+        {
+            "memSize":4096,
+            "graphName":["delicious", "trackers"]
+        }
+        ]
+for para in ParaList:
+    for graphName in para["graphName"]:
+        memSize = para["memSize"]
+        for i in range(0, 3):
+            os.system(f"make em g={graphName} m={memSize}")
+# def file_name(file_dir):
+#     lst = []
+#     for root, dirs, files in os.walk(file_dir):
+#         if ("sorted" in root):
+#             lst.append(root)
+#     return lst
 
-pathList = file_name("/home/shbing/dataUse/datasets/bipartite/")
+# pathList = file_name("/home/shbing/dataUse/datasets/bipartite/")
 
 # for path in pathList:
 #     oriPath = path

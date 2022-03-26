@@ -31,6 +31,7 @@ clean:
 	rm -rf *.o countingAlgorithm/*.o $(exe)
 
 em:
-	#rm -r -i diskData
+	rm -r diskData
 	mkdir -p diskData
-	time -p -v ./butterfly.bin $(g) em 1024
+	#time -p -v ./butterfly.bin $(g) em 1024
+	./butterfly.bin $(g) em $(m)

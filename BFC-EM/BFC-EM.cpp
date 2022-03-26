@@ -7,7 +7,6 @@
 using namespace std;
 
 static uint32_t totalNodeGloable;
-timer calcTime;
 template<class T> void frr(FILE* fp, T& dest, u_int64_t size = 1){
     fread(&dest, sizeof(T), size, fp);
 }
@@ -42,6 +41,7 @@ inline uint32_t getLowerKey(uint64_t u){
 inline uint32_t getHigherKey(uint64_t u){
     return (u >> 32);
 }
+
 void radixOneRound(u_int64_t* bufferArray, u_int64_t* tmpBuffer, u_int64_t num, u_int32_t (*getKey)(uint64_t), u_int32_t totalNode, uint32_t* keyOrderList){
     memset(keyOrderList, 0, sizeof(keyOrderList));
     for(uint32_t i = 0; i < num; i++){
@@ -81,7 +81,7 @@ void radixOneRound(u_int64_t* bufferArray, u_int64_t* tmpBuffer, u_int64_t num, 
         tmpBuffer[keyEndPos[keyOrderMap[key]]++] = bufferArray[i];
     }
     delete keyOrderMap;
-    printf("%lld\n", n);
+    //printf("%lld\n", n);
 }
 
 void calcBuffer(u_int64_t* &bufferArray, u_int64_t num){
@@ -114,12 +114,12 @@ public:
             return 0;
         }      
         wrr(fp, num, 1);
-        calcTime.start();
+        //calcTime.start();
         //sort(bufferArray, bufferArray + num);
         //wolfsort(bufferArray, num, 8, cmp_long);
-        calcBuffer(bufferArray, num);
+        //calcBuffer(bufferArray, num);
        
-        calcTime.fin();
+        //calcTime.fin();
         wrr(fp, bufferArray, num);
         fclose(fp);
         //ioTime.fin();
@@ -171,27 +171,18 @@ class bufferReader{
 public:
     bufferReader(int num, u_int64_t _bufferSize){
         filePath = getPath(num);
-        //ioTime.start();
         fp = fopen(filePath.c_str(), "r");
         assert(fp != NULL);
         fread(&n, 8, 1, fp);
-        //ioTime.fin();
         bufferSize = _bufferSize;
         buffer = new u_int64_t[bufferSize];
         s = 0;
         head = bufferSize;
-        //fclose(fp);
     }
     void load(){
-        //ioTime.start();
-        //fp = fopen(filePath.c_str(), "r");
-        //assert(fp != NULL);
-        //fseek(fp, 1LL* (s + 1) *8, 0);
         head = 0;
         bufferSize = min(bufferSize, n - s);
         fread(buffer, 8, bufferSize, fp);
-        //ioTime.fin();
-        //fclose(fp);
     }
     u_int64_t get(){
         if (head == bufferSize && !isEmpty()){
@@ -206,6 +197,9 @@ public:
         if (s >= n) return 1;
         else return 0;
     }
+    ~bufferReader(){
+        delete buffer;
+    }
     u_int64_t n, s, bufferSize, head;
     u_int64_t* buffer;
     string filePath;
@@ -216,10 +210,10 @@ u_int64_t hashing(u_int64_t a, u_int64_t b, int vertexCount){
     return  (a << 32) + b;
 }
 struct node{
-    u_int64_t val;
-    int pos;
+    uint64_t val;
+    uint64_t pos;
     node(){}
-    node(u_int64_t _val, int _pos){
+    node(u_int64_t _val, uint64_t _pos){
         val = _val;
         pos = _pos;
     }
@@ -230,12 +224,18 @@ bool operator <(node a, node b){
 
 int bfcEm(string graphName, u_int64_t storageSize){
     timer totalTime;
+    timer genTime;
+    timer sortTime;
+    timer readTime;
+    timer writeTime;
+    timer mergeTime;
     totalTime.start();
     u_int64_t maxBufferSize = storageSize / 8 / 2 * 1024 * 1024;
     graph1 g;
     g.loadgraph("/home/shbing/datasetsNew/datasets/bipartite/"+ graphName + "/sorted", -1);
     totalNodeGloable = g.vertexCount;
     int num = 0;
+    genTime.start();
     bufferPool b("diskData/", 1, maxBufferSize);
     for(int i = 0; i < g.vertexCount; i++){
         int len = g.beginPos1[i + 1] - g.beginPos1[i];
@@ -249,6 +249,29 @@ int bfcEm(string graphName, u_int64_t storageSize){
     }
     b.finish();
     delete b.b->bufferArray;
+    genTime.fin();
+    for(int i = 0; i < b.bufferNum; i++){
+        char path[100];
+        sprintf(path, "diskData/%d.in", i);
+        FILE* fp = fopen(path, "r+");
+        assert(fp != NULL);
+        uint64_t num;
+        readTime.start();
+        frr(fp, &num, 1);
+        uint64_t* bufferArray = new uint64_t[num + 1];
+        frr(fp, bufferArray, num);
+        readTime.fin();
+        sortTime.start();
+        calcBuffer(bufferArray, num);
+        sortTime.fin();
+        fseek(fp, 0, SEEK_SET);
+        writeTime.start();
+        wrr(fp, num, 1);
+        wrr(fp, bufferArray, num);
+        fclose(fp);
+        writeTime.fin();
+    }
+    mergeTime.start();
     bufferReader** brList = new bufferReader*[b.bufferNum];
     priority_queue<node> q;
     u_int64_t nn = 0;
@@ -262,24 +285,25 @@ int bfcEm(string graphName, u_int64_t storageSize){
     while(!q.empty()){
         node tmpNode = q.top();
         q.pop();
-        //c.push_back(tmpNode.val);
-        if (tmpNode.val != tmp){
+        if (tmpNode.val == tmp){
+            s++;
+        }else{
             tmp = tmpNode.val;
             ans += s * (s - 1) / 2;
             s = 1;
-        }else s++;
+        }
         if (!brList[tmpNode.pos]->isEmpty()){
             nn++;
             q.push(node(brList[tmpNode.pos]->get(), tmpNode.pos));
         }
     }
     ans += s * (s - 1) / 2;
+    mergeTime.fin();
     totalTime.fin();
     FILE* ansfile = fopen("testOut.csv", "a+");
     if (ansfile == NULL){
         printf("ans open wrong!");
     }
-    fprintf(ansfile, "%s,%lld,%lld,%f,%f\n", graphName.c_str(), storageSize, ans,  totalTime.getTime(), calcTime.getTime());
+    fprintf(ansfile, "%s,%lld,%lld,%f,%f,%f,%f,%f,%f\n", graphName.c_str(), storageSize, ans,  totalTime.getTime(), genTime.getTime(), readTime.getTime(), writeTime.getTime(), sortTime.getTime(), mergeTime.getTime());
     fclose(ansfile);
-    //cout << n << "ans << endl;
 }
